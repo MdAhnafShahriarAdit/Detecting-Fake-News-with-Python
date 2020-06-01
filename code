@@ -1,0 +1,93 @@
+#DataFlair - Make necessary imports
+import numpy as np
+import pandas as pd
+import itertools
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import PassiveAggressiveClassifier
+from sklearn.metrics import accuracy_score, confusion_matrix
+
+#Read the data
+df=pd.read_csv('E:\\DataFlair\\news.csv')
+#Get shape and head
+df.shape
+df.head()
+
+#DataFlair - Get the labels
+labels=df.label
+labels.head()
+
+#DataFlair - Split the dataset
+x_train,x_test,y_train,y_test=train_test_split(df['text'], labels, test_size=0.2, random_state=7)
+
+#DataFlair - Initialize a TfidfVectorizer
+tfidf_vectorizer=TfidfVectorizer(stop_words='english', max_df=0.7)
+#DataFlair - Fit and transform train set, transform test set
+tfidf_train=tfidf_vectorizer.fit_transform(x_train) 
+tfidf_test=tfidf_vectorizer.transform(x_test)
+
+#DataFlair - Initialize a PassiveAggressiveClassifier
+pac=PassiveAggressiveClassifier(max_iter=50)
+pac.fit(tfidf_train,y_train)
+#DataFlair - Predict on the test set and calculate accuracy
+y_pred=pac.predict(tfidf_test)
+score=accuracy_score(y_test,y_pred)
+print(f'Accuracy: {round(score*100,2)}%')
+
+#DataFlair - Build confusion matrix
+confusion_matrix(y_test,y_pred, labels=['FAKE','REAL'])
+
+#--------------------------------------------------------------
+# Applying Passive Aggressive Classifier
+#--------------------------------------------------------------
+
+linear_clf = PassiveAggressiveClassifier(n_iter=50)
+
+linear_clf.fit(tfidf_train, y_train)
+pred = linear_clf.predict(tfidf_test)
+score = metrics.accuracy_score(y_test, pred)
+print("accuracy:   %0.3f" % score)
+cm = metrics.confusion_matrix(y_test, pred, labels=['FAKE', 'REAL'])
+plot_confusion_matrix(cm, classes=['FAKE', 'REAL'])
+print(cm)
+
+
+clf = MultinomialNB(alpha=0.1)               # Additive (Laplace/Lidstone) smoothing parameter
+
+last_score = 0
+for alpha in np.arange(0,1,.1):
+    nb_classifier = MultinomialNB(alpha=alpha)
+    nb_classifier.fit(tfidf_train, y_train)
+    pred = nb_classifier.predict(tfidf_test)
+    score = metrics.accuracy_score(y_test, pred)
+    if score > last_score:
+        clf = nb_classifier
+    print("Alpha: {:.2f} Score: {:.5f}".format(alpha, score))
+
+
+
+    class_labels = classifier.classes_
+    feature_names = vectorizer.get_feature_names()                                            # Array mapping from feature integer indices to feature name
+    topn_class1 = sorted(zip(classifier.coef_[0], feature_names))[:n]
+    topn_class2 = sorted(zip(classifier.coef_[0], feature_names))[-n:]
+
+    for coef, feat in topn_class1:
+        print(class_labels[0], coef, feat)
+
+    print()
+
+    for coef, feat in reversed(topn_class2):
+        print(class_labels[1], coef, feat)
+
+
+most_informative_feature_for_binary_classification(tfidf_vectorizer, linear_clf, n=30)
+feature_names = tfidf_vectorizer.get_feature_names()
+
+### Most real
+sorted(zip(clf.coef_[0], feature_names), reverse=True)[:20]
+
+### Most fake
+sorted(zip(clf.coef_[0], feature_names))[:20]                               # clearly there are certain words which might show political intent and source in the top fake features (such as the words corporate and establishment).
+
+tokens_with_weights = sorted(list(zip(feature_names, clf.coef_[0])))
+#print(tokens_with_weights)
